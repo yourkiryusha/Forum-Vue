@@ -134,7 +134,7 @@ export default {
         left: 0;
         width: 100%;
         height: 100%;
-        background: url('./icons/cross-button.svg') center/contain no-repeat;
+        background: url('icons/cross.svg') center/contain no-repeat;
       }
     }
   }
