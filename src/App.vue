@@ -124,7 +124,8 @@ export default {
           method: 'GET',
           pathname: '/topics'
         });
-        this.topics = [...currentTopics];
+        this.topics = [...currentTopics.topics];
+        this.clientVersion = currentTopics.currentVersion;
       } catch (error) {
         this.reportError(error);
       }
