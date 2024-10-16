@@ -59,17 +59,28 @@ const router = new Router();
 const loadTopics = () => {
 	try {
 		const data = fs.readFileSync('./topics.json', 'utf-8');
-		return JSON.parse(data);
+		return JSON.parse(data).topics || [];
 	} catch (error) {
 		return [];
 	}
 };
 
 const saveTopics = (topics) => {
-	fs.writeFileSync('./topics.json', JSON.stringify(topics, null, 2), 'utf-8');
+	fs.writeFileSync('./topics.json', JSON.stringify({ currentVersion: serverVersion, topics }, null, 2), 'utf-8');
+};
+
+const loadVersion = () => {
+	try {
+		const data = fs.readFileSync('./topics.json', 'utf-8');
+		return JSON.parse(data).currentVersion || 0;
+	} catch (error) {
+		return 0;
+	}
 };
 
 const topics = loadTopics();
+
+let serverVersion = loadVersion();
 
 router.addRoute('GET', /^\/topics\/?$/, (req, res) => {
 	try {
@@ -92,9 +103,6 @@ router.addRoute('GET', /^\/topics\/(\d+)$/, (req, res, topicId) => {
 	}
 });
 
-let waitingClients = [];
-let serverVersion = 0;
-
 router.addRoute('POST', /^\/topics\/?$/, (req, res) => {
 	let body = '';
 	req.on('data', chunk => {
@@ -115,8 +123,8 @@ router.addRoute('POST', /^\/topics\/?$/, (req, res) => {
 					comments: []
 				};
 				topics.push(topic);
-				saveTopics(topics);
 				serverVersion++;
+				saveTopics(topics);
 				router.respond(res, 201, 'Created');
 			} else {
 				router.respond(res, 400, 'Bad request');
@@ -143,8 +151,8 @@ router.addRoute('POST', /^\/topics\/(\d+)\/comment$/, (req, res, topicId) => {
 					message: data.message
 				};
 				currTopic.comments.push(comment);
-				saveTopics(topics);
 				serverVersion++;
+				saveTopics(topics);
 				router.respond(res, 201, 'Created');
 			} else {
 				router.respond(res, 400, 'Bad request');
@@ -160,8 +168,8 @@ router.addRoute('DELETE', /^\/topics\/(\d+)$/, (req, res, topicId) => {
 		const currTopicId = topics.findIndex(currT => currT.id === +topicId);
 		if (currTopicId !== -1) {
 			topics.splice(currTopicId, 1);
-			saveTopics(topics);
 			serverVersion++;
+			saveTopics(topics);
 			router.respond(res, 200, 'OK');
 		} else {
 			router.respond(res, 404, 'Not found');
@@ -170,6 +178,8 @@ router.addRoute('DELETE', /^\/topics\/(\d+)$/, (req, res, topicId) => {
 		router.respond(res, 500, 'Internal Server Error');
 	}
 });
+
+let waitingClients = [];
 
 router.addRoute('GET', /^\/longPolling\/?$/, (req, res) => {
 	const { responseTime, clientVersion } = url.parse(req.url, true).query;

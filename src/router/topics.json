@@ -1,9 +1,4 @@
-[
-  {
-    "id": 1,
-    "author": "1",
-    "title": "1",
-    "summary": "1",
-    "comments": []
-  }
-]
+{
+  "currentVersion": 0,
+  "topics": []
+}
