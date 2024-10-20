@@ -86,13 +86,11 @@ export default {
   computed: {
     filteredAndSortedTopics() {
       let sortedTopics = [...this.topics];
-
       if (this.searchByTitle) {
         sortedTopics =  this.topics.filter(currentTopic => {
           return currentTopic.title.toLocaleLowerCase().includes(this.searchByTitle.toLowerCase());
         });
       }
-
       switch (this.sortByOption) {
         case '':
           return sortedTopics;
