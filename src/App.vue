@@ -1,61 +1,37 @@
 <template>
-  <button @click="openDialog" class="button__dialog" type="button">New Discussion</button>
-  <div class="topics">
-    <div
-      class="topic"
-      v-for="topic in topics"
-      :key="topic.id"
-      :id="topic.id"
-    >
-      <header class="topic__header">
-        <div class="topic__header-title">
-          <h1 class="topic__header-description">{{ topic.title }}</h1>
-          <button
-            @click="requestToDeleteTopic(topic.id)"
-            class="topic__header-button"
-            type="button"
-          >
-            Delete Topic
-          </button>
-        </div>
-        <h2 class="topic__header-summary">{{ topic.summary }}</h2>
-        <p class="topic__header-author"><strong>created by </strong>{{ topic.author }}</p>
-      </header>
-      <div class="topic__body">
-        <div
-          class="topic__body-commentary"
-          v-for="comment in topic.comments"
-          :key="comment.id"
-          :id="comment.id"
-        >
-          <div class="topic__body-commentary-author">{{ comment.author }}:</div>
-          <div class="topic__body-commentary-message">{{ comment.message }}</div>
-        </div>
-      </div>
-      <button
-        @click="displayDialog(topic.id)"
-        class="topic__button"
-        type="button">
-        Add Comment
-      </button>
-    </div>
-  </div>
-  <CommentDialog v-model:is-show="isDisplay" @postComment="newComment=>this.requestToAddComment(newComment, this.currentId)" />
-  <TopicDialog v-model:is-open="isOpen" @postTopic="requestToAddTopic" />
+  <SideBar
+    @update:isOpenTopic="openDialogTopic"
+  />
+  <MainContent
+    :topics="this.topics"
+    @update:isOpenComment="openDialogComment"
+    @deleteTopic="requestToDeleteTopic"
+  />
+  <CommentDialog
+    v-model:is-open="isOpenComment"
+    @postComment="newComment=>this.requestToAddComment(newComment, this.currentId)"
+  />
+  <TopicDialog
+    v-model:is-open="isOpenTopic"
+    @postTopic="requestToAddTopic" />
 </template>
 
 <script>
 import TopicDialog from '@/components/TopicDialog.vue'
 import CommentDialog from '@/components/CommentDialog.vue'
+import SideBar from '@/components/SideBar.vue'
+import MainContent from '@/components/MainContent.vue'
 export default {
   components: {
+    MainContent,
+    SideBar,
     CommentDialog,
     TopicDialog
   },
   data() {
     return {
-      isOpen: false,
-      isDisplay: false,
+      isOpenTopic: false,
+      isOpenComment: false,
       topics: [],
       currentId: null,
       responseTime: 15,
@@ -66,14 +42,13 @@ export default {
     this.requestLongPolling();
   },
   methods: {
-    openDialog() {
-      this.isOpen = true;
+    openDialogTopic() {
+      this.isOpenTopic = true;
     },
-    displayDialog(currentId) {
-      this.isDisplay = true;
+    openDialogComment(currentId) {
+      this.isOpenComment = true;
       this.currentId = currentId;
     },
-
     async request(options) {
       const response = await fetch(options.pathname, {
         method: options.method,
@@ -91,13 +66,11 @@ export default {
         return response.text();
       }
     },
-
     reportError(error) {
       if (error) {
         alert(error.toString());
       }
     },
-
     async requestLongPolling() {
       await this.requestToGetTopics();
       const longPolling = async () => {
@@ -117,7 +90,6 @@ export default {
       };
       await longPolling();
     },
-
     async requestToGetTopics() {
       try {
         const currentTopics = await this.request({
@@ -130,8 +102,8 @@ export default {
         this.reportError(error);
       }
     },
-
     async requestToAddTopic(newTopic) {
+      console.log(newTopic)
       try {
         await this.request({
           method: 'POST',
@@ -142,7 +114,6 @@ export default {
         this.reportError(error);
       }
     },
-
     async requestToAddComment(newComment, topicId) {
       try {
         await this.request({
@@ -154,7 +125,6 @@ export default {
         this.reportError(error);
       }
     },
-
     async requestToDeleteTopic(topicId) {
       try {
         await this.request({
